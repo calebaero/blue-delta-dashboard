@@ -470,7 +470,7 @@ export default function InventoryPage() {
                           color: "hsl(var(--card-foreground))",
                           fontSize: "12px",
                         }}
-                        formatter={(value: number) => [`${value}%`, "Level"]}
+                        formatter={(value: number | undefined, _name: string | undefined) => [`${value ?? 0}%`, "Level"]}
                       />
                       <ReferenceLine
                         x={30}
@@ -536,8 +536,8 @@ export default function InventoryPage() {
                           color: "hsl(var(--card-foreground))",
                           fontSize: "12px",
                         }}
-                        formatter={(value: number, name: string) => [
-                          `${value} yds`,
+                        formatter={(value: number | undefined, name: string | undefined) => [
+                          `${value ?? 0} yds`,
                           name === "consumed" ? "Consumed" : "Received",
                         ]}
                       />

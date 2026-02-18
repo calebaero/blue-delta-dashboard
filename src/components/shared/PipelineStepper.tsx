@@ -108,10 +108,10 @@ export function PipelineStepper({
                   <span>{formatDate(stageData.enteredAt)}</span>
                   <span>·</span>
                   <span>{getDaysInStage(stageData)}</span>
-                  {stageData.assignedTo && (
+                  {stageData.artisan && (
                     <>
                       <span>·</span>
-                      <span>{stageData.assignedTo}</span>
+                      <span>{stageData.artisan}</span>
                     </>
                   )}
                 </div>

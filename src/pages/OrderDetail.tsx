@@ -352,7 +352,7 @@ export default function OrderDetailPage() {
                     {shipment.stages.map((stage, idx) => {
                       const isLast = idx === shipment.stages.length - 1
                       return (
-                        <div key={stage.stage} className="flex gap-3">
+                        <div key={stage.status} className="flex gap-3">
                           <div className="flex flex-col items-center">
                             <div
                               className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
@@ -369,7 +369,7 @@ export default function OrderDetailPage() {
                           </div>
                           <div className="pb-4">
                             <p className="text-sm font-medium">
-                              {stage.stage}
+                              {stage.status}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {formatDate(stage.timestamp)}

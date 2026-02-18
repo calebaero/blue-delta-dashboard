@@ -17,7 +17,6 @@ import {
   Gift,
   Star,
   User,
-  Calendar,
   Package,
 } from "lucide-react"
 import { PageContainer } from "@/components/layout/PageContainer"
@@ -31,7 +30,7 @@ import { Badge } from "@/components/ui/badge"
 import { useCustomerStore } from "@/stores/useCustomerStore"
 import { useOrderStore } from "@/stores/useOrderStore"
 import { initializeMockData } from "@/data/mockData"
-import type { Order, MeasurementProfile } from "@/data/types"
+import type { Customer, Order, MeasurementProfile } from "@/data/types"
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -358,10 +357,9 @@ export default function CustomerDetailPage() {
 function ContactTab({
   customer,
 }: {
-  customer: NonNullable<ReturnType<typeof useCustomerStore.getState>["getCustomerById"]>
+  customer: Customer
 }) {
-  type CustomerType = NonNullable<ReturnType<typeof useCustomerStore.getState>["getCustomerById"]>
-  const c = customer as CustomerType
+  const c = customer
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -373,7 +371,6 @@ function ContactTab({
         </CardHeader>
         <CardContent className="text-sm">
           <p>{c.shippingAddress.street}</p>
-          {c.shippingAddress.unit && <p>{c.shippingAddress.unit}</p>}
           <p>
             {c.shippingAddress.city}, {c.shippingAddress.state}{" "}
             {c.shippingAddress.zip}
@@ -390,7 +387,6 @@ function ContactTab({
           </CardHeader>
           <CardContent className="text-sm">
             <p>{c.billingAddress.street}</p>
-            {c.billingAddress.unit && <p>{c.billingAddress.unit}</p>}
             <p>
               {c.billingAddress.city}, {c.billingAddress.state}{" "}
               {c.billingAddress.zip}
@@ -683,10 +679,9 @@ function GiftingTab({ orders }: { orders: Order[] }) {
 function PreferencesTab({
   customer,
 }: {
-  customer: NonNullable<ReturnType<typeof useCustomerStore.getState>["getCustomerById"]>
+  customer: Customer
 }) {
-  type CustomerType = NonNullable<ReturnType<typeof useCustomerStore.getState>["getCustomerById"]>
-  const c = customer as CustomerType
+  const c = customer
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -765,10 +760,9 @@ function PreferencesTab({
 function NotesTab({
   customer,
 }: {
-  customer: NonNullable<ReturnType<typeof useCustomerStore.getState>["getCustomerById"]>
+  customer: Customer
 }) {
-  type CustomerType = NonNullable<ReturnType<typeof useCustomerStore.getState>["getCustomerById"]>
-  const c = customer as CustomerType
+  const c = customer
 
   return (
     <div className="space-y-4">

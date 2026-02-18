@@ -92,14 +92,14 @@ export function ChannelMixChart({ data }: ChannelMixChartProps) {
                   color: "hsl(var(--card-foreground))",
                   fontSize: "13px",
                 }}
-                formatter={(value: number, name: string) => {
+                formatter={(value: number | undefined, name: string | undefined) => {
                   const labels: Record<string, string> = {
                     dtcWeb: "DTC Web",
                     dtcStore: "DTC Store",
                     b2b: "B2B (All)",
                     trunkShow: "Trunk Show",
                   }
-                  return [value, labels[name] || name]
+                  return [value ?? 0, labels[name ?? ""] || name || ""]
                 }}
               />
               <Area

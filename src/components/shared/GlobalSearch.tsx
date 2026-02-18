@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react"
 import { useNavigate } from "react-router"
-import { Users, ShoppingCart, Handshake, Tag, Package } from "lucide-react"
+import { Users, ShoppingCart, Handshake, Tag } from "lucide-react"
 import {
   CommandDialog,
   CommandInput,

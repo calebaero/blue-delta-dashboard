@@ -100,10 +100,11 @@ export function RevenueTrendChart({ data }: RevenueTrendChartProps) {
                   color: "hsl(var(--card-foreground))",
                   fontSize: "13px",
                 }}
-                formatter={(value: number, name: string) => {
+                formatter={(value: number | undefined, name: string | undefined) => {
+                  const v = value ?? 0
                   if (name === "revenue")
-                    return [`$${value.toLocaleString()}`, "Revenue"]
-                  return [value, "Orders"]
+                    return [`$${v.toLocaleString()}`, "Revenue"]
+                  return [v, "Orders"]
                 }}
               />
               <Bar

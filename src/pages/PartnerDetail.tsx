@@ -469,10 +469,10 @@ export default function PartnerDetailPage() {
                             color: "hsl(var(--card-foreground))",
                             fontSize: "12px",
                           }}
-                          formatter={(value: number, name: string) => [
+                          formatter={(value: number | undefined, name: string | undefined) => [
                             name === "revenue"
-                              ? formatCurrency(value)
-                              : value,
+                              ? formatCurrency(value ?? 0)
+                              : (value ?? 0),
                             name === "revenue" ? "Revenue" : "Orders",
                           ]}
                         />

@@ -5,7 +5,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Cell,
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -73,9 +72,9 @@ export function PipelineChart({ data }: PipelineChartProps) {
               <XAxis type="number" hide />
               <YAxis type="category" hide dataKey="name" />
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  `${value} orders`,
-                  name,
+                formatter={(value: number | undefined, name: string | undefined) => [
+                  `${value ?? 0} orders`,
+                  name ?? "",
                 ]}
                 contentStyle={{
                   borderRadius: "8px",

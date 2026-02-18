@@ -46,10 +46,11 @@ export function generateMonthlyMetrics(): MonthlyMetrics[] {
 
     // Channel mix evolving: B2B growing from 20% to 30%
     const b2bPct = 0.2 + i * 0.006 // 20% → ~30%
-    const dtcWebPct = 0.5 - i * 0.003 // Slight decline
+    const _dtcWebPct = 0.5 - i * 0.003 // Slight decline (used for documentation)
     const dtcStorePct = 0.15
     const trunkShowPct = 0.05
-    // Remaining goes to DTC Web
+    // Remaining goes to DTC Web (dtcWebOrders = total - others)
+    void _dtcWebPct
 
     const b2bOrders = Math.round(orderCount * b2bPct)
     const dtcStoreOrders = Math.round(orderCount * dtcStorePct)
