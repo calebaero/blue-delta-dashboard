@@ -512,7 +512,7 @@ function MeasurementsTab({
                   />
                   <PolarRadiusAxis
                     tick={{ fontSize: 10 }}
-                    className="fill-muted-foreground"
+                    className="fill-transparent"
                   />
                   <Radar
                     dataKey="value"
