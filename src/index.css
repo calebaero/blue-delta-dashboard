@@ -80,6 +80,7 @@
     --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
     --sidebar-border: oklch(0.929 0.013 255.508);
     --sidebar-ring: oklch(0.457 0.24 277.023);
+    --bdj-transparent-background: oklch(1 0 0 / 0%);
 }
 
 .dark {
@@ -115,6 +116,7 @@
     --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.488 0.243 264.376);
+    --bdj-transparent-background: oklch(1 0 0 / 0%);
 }
 
 @layer base {
@@ -126,6 +128,6 @@
   }
 }
 
-g.recharts-layer.recharts-polar-angle-axis.angleAxis path.recharts-polygon {
-    fill-opacity: 0 !important;
+.recharts-layer.recharts-polar-angle-axis.angleAxis path.recharts-polygon.fill-muted-foreground {
+    fill: var(--bdj-transparent-background) !important;
 }
