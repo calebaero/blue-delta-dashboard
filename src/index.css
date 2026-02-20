@@ -127,5 +127,5 @@
 }
 
 g.recharts-layer.recharts-polar-angle-axis.angleAxis path.recharts-polygon {
-    fill-opacity: 0;
+    fill-opacity: 0 !important;
 }
