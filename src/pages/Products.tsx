@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { LayoutGrid, List, ArrowRight, Check, X } from "lucide-react"
 import { PageContainer } from "@/components/layout/PageContainer"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { DataTable } from "@/components/shared/DataTable"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 import type { Product, ProductCategory, FabricFamily } from "@/data/types"
 
 const CATEGORIES: ProductCategory[] = ["Pants", "Jacket", "Belt", "Accessory"]
@@ -37,7 +38,15 @@ function formatCurrency(value: number): string {
 }
 
 export default function ProductsPage() {
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const productError = useProductStore((s) => s.error)
+
+  useEffect(() => {
+    fetchProductData()
+  }, [])
+
   const [view, setView] = useState<"grid" | "list">("grid")
   const [categoryFilter, setCategoryFilter] = useState("All")
   const [fabricFilter, setFabricFilter] = useState("All")
@@ -114,6 +123,7 @@ export default function ProductsPage() {
 
   return (
     <PageContainer title="Product Catalog">
+      <PageLoadingState isLoading={productLoading} error={productError}>
       <div className="space-y-4">
         {/* Controls */}
         <div className="flex flex-wrap items-center gap-3">
@@ -236,6 +246,7 @@ export default function ProductsPage() {
           <DataTable columns={listColumns} data={filteredProducts} pageSize={20} />
         )}
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

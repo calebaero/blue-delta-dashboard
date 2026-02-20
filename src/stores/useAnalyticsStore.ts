@@ -1,12 +1,17 @@
 import { create } from "zustand"
 import type { MonthlyMetrics } from "@/data/types"
 import { initializeMockData } from "@/data/mockData"
+import { USE_SUPABASE } from "@/lib/config"
+import { fetchMonthlyMetrics } from "@/lib/queries"
 
 interface AnalyticsState {
   monthlyMetrics: MonthlyMetrics[]
+  isLoading: boolean
+  error: string | null
 }
 
 interface AnalyticsActions {
+  fetchData: () => Promise<void>
   getRevenueData: () => { month: string; revenue: number; orderCount: number }[]
   getOrderTrendData: () => {
     month: string
@@ -37,7 +42,24 @@ export const useAnalyticsStore = create<AnalyticsState & AnalyticsActions>(
     const data = initializeMockData()
 
     return {
-      monthlyMetrics: data.monthlyMetrics,
+      monthlyMetrics: USE_SUPABASE ? [] : data.monthlyMetrics,
+      isLoading: USE_SUPABASE,
+      error: null,
+
+      fetchData: async () => {
+        if (!USE_SUPABASE) {
+          const mockData = initializeMockData()
+          _set({ monthlyMetrics: mockData.monthlyMetrics, isLoading: false })
+          return
+        }
+        _set({ isLoading: true, error: null })
+        try {
+          const monthlyMetrics = await fetchMonthlyMetrics()
+          _set({ monthlyMetrics, isLoading: false })
+        } catch (err) {
+          _set({ error: (err as Error).message, isLoading: false })
+        }
+      },
 
       getRevenueData: () => {
         return get().monthlyMetrics.map((m) => ({

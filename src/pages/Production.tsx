@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import {
@@ -38,9 +38,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { useProductionStore } from "@/stores/useProductionStore"
 import { useCustomerStore } from "@/stores/useCustomerStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 import type { Order, OrderStatus, FabricFamily } from "@/data/types"
 
 const STAGE_COLORS: Record<OrderStatus, string> = {
@@ -61,7 +62,7 @@ const FABRIC_FAMILIES: FabricFamily[] = [
 ]
 
 function getDaysInStage(order: Order): number {
-  const currentStage = order.pipelineStages.find(
+  const currentStage = (order.pipelineStages ?? []).find(
     (s) => s.stage === order.status && !s.exitedAt
   )
   if (!currentStage) return 0
@@ -100,7 +101,27 @@ export default function ProductionPage() {
   const getArtisanWorkload = useProductionStore((s) => s.getArtisanWorkload)
   const getOrdersByStage = useProductionStore((s) => s.getOrdersByStage)
   const customers = useCustomerStore((s) => s.customers)
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
+
+  const fetchProductionData = useProductionStore((s) => s.fetchData)
+  const subscribeProduction = useProductionStore((s) => s.subscribeRealtime)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const productionLoading = useProductionStore((s) => s.isLoading)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const productionError = useProductionStore((s) => s.error)
+  const customerError = useCustomerStore((s) => s.error)
+  const productError = useProductStore((s) => s.error)
+  const isLoading = productionLoading || customerLoading || productLoading
+  const error = productionError || customerError || productError
+
+  useEffect(() => {
+    fetchProductionData()
+    fetchCustomerData()
+    fetchProductData()
+    return subscribeProduction()
+  }, [])
 
   const metrics = getPipelineMetrics()
   const artisanWorkload = getArtisanWorkload()
@@ -266,6 +287,7 @@ export default function ProductionPage() {
 
   return (
     <PageContainer title="Production Pipeline">
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-4">
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -487,6 +509,7 @@ export default function ProductionPage() {
           />
         )}
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

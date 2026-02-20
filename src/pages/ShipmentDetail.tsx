@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useParams, Link } from "react-router"
 import {
   ArrowLeft,
@@ -14,10 +14,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { useShippingStore } from "@/stores/useShippingStore"
 import { useCustomerStore } from "@/stores/useCustomerStore"
 import { useProductionStore } from "@/stores/useProductionStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 import type { ShipmentStatus } from "@/data/types"
 
 const STATUS_ORDER: ShipmentStatus[] = [
@@ -59,7 +60,29 @@ export default function ShipmentDetailPage() {
   const getShipmentById = useShippingStore((s) => s.getShipmentById)
   const customers = useCustomerStore((s) => s.customers)
   const orders = useProductionStore((s) => s.orders)
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
+
+  const fetchShippingData = useShippingStore((s) => s.fetchData)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const fetchProductionData = useProductionStore((s) => s.fetchData)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const shippingLoading = useShippingStore((s) => s.isLoading)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const productionLoading = useProductionStore((s) => s.isLoading)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const shippingError = useShippingStore((s) => s.error)
+  const customerError = useCustomerStore((s) => s.error)
+  const productionError = useProductionStore((s) => s.error)
+  const productError = useProductStore((s) => s.error)
+  const isLoading = shippingLoading || customerLoading || productionLoading || productLoading
+  const error = shippingError || customerError || productionError || productError
+
+  useEffect(() => {
+    fetchShippingData()
+    fetchCustomerData()
+    fetchProductionData()
+    fetchProductData()
+  }, [])
 
   const shipment = getShipmentById(id ?? "")
 
@@ -124,6 +147,7 @@ export default function ShipmentDetailPage() {
 
   return (
     <PageContainer title={`Shipment ${shipment.id}`}>
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-6">
         {/* Back link */}
         <Button asChild variant="ghost" size="sm" className="gap-1">
@@ -466,6 +490,7 @@ export default function ShipmentDetailPage() {
           </div>
         </div>
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

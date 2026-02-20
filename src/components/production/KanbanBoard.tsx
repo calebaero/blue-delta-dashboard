@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import {
   DragDropContext,
   Droppable,
@@ -11,7 +11,7 @@ import { KanbanCard } from "./KanbanCard"
 import { useProductionStore } from "@/stores/useProductionStore"
 import { useCustomerStore } from "@/stores/useCustomerStore"
 import { useInventoryStore } from "@/stores/useInventoryStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 import type { OrderStatus, Order } from "@/data/types"
 
 const STAGE_ORDER: OrderStatus[] = [
@@ -40,7 +40,7 @@ interface KanbanBoardProps {
 }
 
 function getDaysInStage(order: Order): number {
-  const currentStage = order.pipelineStages.find(
+  const currentStage = (order.pipelineStages ?? []).find(
     (s) => s.stage === order.status && !s.exitedAt
   )
   if (!currentStage) return 0
@@ -59,7 +59,12 @@ export function KanbanBoard({
   const moveOrderToStage = useProductionStore((s) => s.moveOrderToStage)
   const customers = useCustomerStore((s) => s.customers)
   const fabricRolls = useInventoryStore((s) => s.fabricRolls)
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+
+  useEffect(() => {
+    fetchProductData()
+  }, [])
 
   const customerMap = useMemo(
     () => new Map(customers.map((c) => [c.id, c])),

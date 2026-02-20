@@ -13,7 +13,7 @@ import {
 import { useCustomerStore } from "@/stores/useCustomerStore"
 import { useOrderStore } from "@/stores/useOrderStore"
 import { usePartnerStore } from "@/stores/usePartnerStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 
 export function GlobalSearch() {
   const [open, setOpen] = useState(false)
@@ -22,7 +22,12 @@ export function GlobalSearch() {
   const customers = useCustomerStore((s) => s.customers)
   const orders = useOrderStore((s) => s.orders)
   const partners = usePartnerStore((s) => s.partners)
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+
+  useEffect(() => {
+    fetchProductData()
+  }, [])
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {

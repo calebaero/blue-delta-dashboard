@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useParams, Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowLeft } from "lucide-react"
@@ -9,10 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { useProductionStore } from "@/stores/useProductionStore"
 import { useCustomerStore } from "@/stores/useCustomerStore"
 import { useInventoryStore } from "@/stores/useInventoryStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 import type { Order, FabricFamily } from "@/data/types"
 
 const FABRIC_FAMILY_COLORS: Record<FabricFamily, string> = {
@@ -41,10 +42,32 @@ interface OrderRow extends Order {
 
 export default function ProductDetailPage() {
   const { id } = useParams()
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
   const orders = useProductionStore((s) => s.orders)
   const customers = useCustomerStore((s) => s.customers)
   const fabricRolls = useInventoryStore((s) => s.fabricRolls)
+
+  const fetchProductionData = useProductionStore((s) => s.fetchData)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const fetchInventoryData = useInventoryStore((s) => s.fetchData)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const productionLoading = useProductionStore((s) => s.isLoading)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const inventoryLoading = useInventoryStore((s) => s.isLoading)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const productionError = useProductionStore((s) => s.error)
+  const customerError = useCustomerStore((s) => s.error)
+  const inventoryError = useInventoryStore((s) => s.error)
+  const productError = useProductStore((s) => s.error)
+  const isLoading = productionLoading || customerLoading || inventoryLoading || productLoading
+  const error = productionError || customerError || inventoryError || productError
+
+  useEffect(() => {
+    fetchProductionData()
+    fetchCustomerData()
+    fetchInventoryData()
+    fetchProductData()
+  }, [])
 
   const product = products.find((p) => p.id === id)
 
@@ -189,6 +212,7 @@ export default function ProductDetailPage() {
 
   return (
     <PageContainer title={product.name}>
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-6">
         <Button asChild variant="ghost" size="sm" className="gap-1">
           <Link to="/products">
@@ -381,6 +405,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

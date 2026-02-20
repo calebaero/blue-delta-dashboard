@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useParams, Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowLeft, Scissors, MapPin, Calendar, Package } from "lucide-react"
@@ -12,10 +12,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { useInventoryStore } from "@/stores/useInventoryStore"
 import { useProductionStore } from "@/stores/useProductionStore"
 import { useCustomerStore } from "@/stores/useCustomerStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 import type { Order } from "@/data/types"
 
 function formatDate(dateStr: string): string {
@@ -42,7 +43,29 @@ export default function RollDetailPage() {
   const deductYardage = useInventoryStore((s) => s.deductYardage)
   const orders = useProductionStore((s) => s.orders)
   const customers = useCustomerStore((s) => s.customers)
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
+
+  const fetchInventoryData = useInventoryStore((s) => s.fetchData)
+  const fetchProductionData = useProductionStore((s) => s.fetchData)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const inventoryLoading = useInventoryStore((s) => s.isLoading)
+  const productionLoading = useProductionStore((s) => s.isLoading)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const inventoryError = useInventoryStore((s) => s.error)
+  const productionError = useProductionStore((s) => s.error)
+  const customerError = useCustomerStore((s) => s.error)
+  const productError = useProductStore((s) => s.error)
+  const isLoading = inventoryLoading || productionLoading || customerLoading || productLoading
+  const error = inventoryError || productionError || customerError || productError
+
+  useEffect(() => {
+    fetchInventoryData()
+    fetchProductionData()
+    fetchCustomerData()
+    fetchProductData()
+  }, [])
 
   const [deductAmount, setDeductAmount] = useState("")
 
@@ -215,6 +238,7 @@ export default function RollDetailPage() {
 
   return (
     <PageContainer title={`Roll ${roll.id}`}>
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-6">
         {/* Back link */}
         <Button asChild variant="ghost" size="sm" className="gap-1">
@@ -502,6 +526,7 @@ export default function RollDetailPage() {
           </div>
         </div>
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

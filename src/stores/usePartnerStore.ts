@@ -1,6 +1,8 @@
 import { create } from "zustand"
 import type { Partner, PartnerRep, Order } from "@/data/types"
 import { initializeMockData } from "@/data/mockData"
+import { USE_SUPABASE } from "@/lib/config"
+import { fetchPartners, fetchPartnerReps, fetchOrders } from "@/lib/queries"
 
 interface PartnerMetrics {
   totalRevenue: number
@@ -15,9 +17,12 @@ interface PartnerState {
   partnerReps: PartnerRep[]
   selectedPartnerId: string | null
   orders: Order[]
+  isLoading: boolean
+  error: string | null
 }
 
 interface PartnerActions {
+  fetchData: () => Promise<void>
   getPartnerById: (id: string) => Partner | undefined
   getRepsByPartner: (partnerId: string) => PartnerRep[]
   getPartnerOrders: (partnerId: string) => Order[]
@@ -30,10 +35,36 @@ export const usePartnerStore = create<PartnerState & PartnerActions>(
     const data = initializeMockData()
 
     return {
-      partners: data.partners,
-      partnerReps: data.partnerReps,
+      partners: USE_SUPABASE ? [] : data.partners,
+      partnerReps: USE_SUPABASE ? [] : data.partnerReps,
       selectedPartnerId: null,
-      orders: data.orders,
+      orders: USE_SUPABASE ? [] : data.orders,
+      isLoading: USE_SUPABASE,
+      error: null,
+
+      fetchData: async () => {
+        if (!USE_SUPABASE) {
+          const mockData = initializeMockData()
+          set({
+            partners: mockData.partners,
+            partnerReps: mockData.partnerReps,
+            orders: mockData.orders,
+            isLoading: false,
+          })
+          return
+        }
+        set({ isLoading: true, error: null })
+        try {
+          const [partners, partnerReps, orders] = await Promise.all([
+            fetchPartners(),
+            fetchPartnerReps(),
+            fetchOrders(),
+          ])
+          set({ partners, partnerReps, orders, isLoading: false })
+        } catch (err) {
+          set({ error: (err as Error).message, isLoading: false })
+        }
+      },
 
       getPartnerById: (id) => {
         return get().partners.find((p) => p.id === id)

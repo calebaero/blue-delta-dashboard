@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown } from "lucide-react"
@@ -7,6 +7,7 @@ import { DataTable } from "@/components/shared/DataTable"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { useCustomerStore } from "@/stores/useCustomerStore"
 import type { MeasurementProfile } from "@/data/types"
 
@@ -26,6 +27,12 @@ interface MeasurementRow extends MeasurementProfile {
 export default function MeasurementsPage() {
   const customers = useCustomerStore((s) => s.customers)
   const measurements = useCustomerStore((s) => s.measurements)
+
+  const fetchData = useCustomerStore((s) => s.fetchData)
+  const isLoading = useCustomerStore((s) => s.isLoading)
+  const error = useCustomerStore((s) => s.error)
+
+  useEffect(() => { fetchData() }, [])
 
   const customerMap = useMemo(
     () => new Map(customers.map((c) => [c.id, c])),
@@ -208,6 +215,7 @@ export default function MeasurementsPage() {
 
   return (
     <PageContainer title="Measurement Profiles">
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-4">
         {/* Stats row */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
@@ -252,6 +260,7 @@ export default function MeasurementsPage() {
         {/* Table */}
         <DataTable columns={columns} data={rows} pageSize={20} />
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

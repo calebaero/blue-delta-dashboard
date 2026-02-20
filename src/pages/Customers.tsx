@@ -1,8 +1,9 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, Search } from "lucide-react"
 import { PageContainer } from "@/components/layout/PageContainer"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { DataTable } from "@/components/shared/DataTable"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { Input } from "@/components/ui/input"
@@ -187,6 +188,11 @@ export default function CustomersPage() {
   const setSearchQuery = useCustomerStore((s) => s.setSearchQuery)
   const setTierFilter = useCustomerStore((s) => s.setTierFilter)
   const setChannelFilter = useCustomerStore((s) => s.setChannelFilter)
+  const fetchData = useCustomerStore((s) => s.fetchData)
+  const isLoading = useCustomerStore((s) => s.isLoading)
+  const error = useCustomerStore((s) => s.error)
+
+  useEffect(() => { fetchData() }, [])
 
   const filteredCustomers = useMemo(() => {
     return customers.filter((c) => {
@@ -204,6 +210,7 @@ export default function CustomersPage() {
 
   return (
     <PageContainer title="Customers">
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-4">
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
@@ -253,6 +260,7 @@ export default function CustomersPage() {
         {/* Table */}
         <DataTable columns={columns} data={filteredCustomers} pageSize={20} />
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

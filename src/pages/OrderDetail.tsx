@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { useParams, Link } from "react-router"
 import {
   Package,
@@ -8,6 +9,7 @@ import {
   Hash,
 } from "lucide-react"
 import { PageContainer } from "@/components/layout/PageContainer"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { PipelineStepper } from "@/components/shared/PipelineStepper"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -16,7 +18,7 @@ import { useOrderStore } from "@/stores/useOrderStore"
 import { useCustomerStore } from "@/stores/useCustomerStore"
 import { useShippingStore } from "@/stores/useShippingStore"
 import { useInventoryStore } from "@/stores/useInventoryStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -38,7 +40,33 @@ export default function OrderDetailPage() {
   const getActiveMeasurement = useCustomerStore((s) => s.getActiveMeasurement)
   const getShipmentByOrder = useShippingStore((s) => s.getShipmentByOrder)
   const getRollById = useInventoryStore((s) => s.getRollById)
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
+  const fetchOrderData = useOrderStore((s) => s.fetchData)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const fetchShippingData = useShippingStore((s) => s.fetchData)
+  const fetchInventoryData = useInventoryStore((s) => s.fetchData)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const orderLoading = useOrderStore((s) => s.isLoading)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const shippingLoading = useShippingStore((s) => s.isLoading)
+  const inventoryLoading = useInventoryStore((s) => s.isLoading)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const orderError = useOrderStore((s) => s.error)
+  const customerError = useCustomerStore((s) => s.error)
+  const shippingError = useShippingStore((s) => s.error)
+  const inventoryError = useInventoryStore((s) => s.error)
+  const productError = useProductStore((s) => s.error)
+  const isLoading = orderLoading || customerLoading || shippingLoading || inventoryLoading || productLoading
+  const error = orderError || customerError || shippingError || inventoryError || productError
+
+  useEffect(() => {
+    fetchOrderData()
+    fetchCustomerData()
+    fetchShippingData()
+    fetchInventoryData()
+    fetchProductData()
+  }, [])
+
   const productMap = new Map(products.map((p) => [p.id, p]))
 
   const order = id ? getOrderById(id) : undefined
@@ -65,6 +93,7 @@ export default function OrderDetailPage() {
 
   return (
     <PageContainer title={`Order ${order.id}`}>
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* LEFT — Summary Cards */}
         <div className="space-y-4">
@@ -426,6 +455,7 @@ export default function OrderDetailPage() {
           )}
         </div>
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

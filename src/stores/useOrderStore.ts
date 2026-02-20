@@ -1,6 +1,8 @@
 import { create } from "zustand"
 import type { Order, OrderStatus, OrderChannel } from "@/data/types"
 import { initializeMockData } from "@/data/mockData"
+import { USE_SUPABASE } from "@/lib/config"
+import { fetchOrders, advanceOrderStage as advanceOrderStageApi } from "@/lib/queries"
 
 const PIPELINE_ORDER: OrderStatus[] = [
   "Order Received",
@@ -19,9 +21,12 @@ interface OrderState {
   channelFilter: OrderChannel | "All"
   dateRange: { from: string | null; to: string | null }
   searchQuery: string
+  isLoading: boolean
+  error: string | null
 }
 
 interface OrderActions {
+  fetchData: () => Promise<void>
   getOrderById: (id: string) => Order | undefined
   getOrdersByCustomer: (customerId: string) => Order[]
   getOrdersByPartner: (partnerId: string) => Order[]
@@ -38,12 +43,29 @@ export const useOrderStore = create<OrderState & OrderActions>((set, get) => {
   const data = initializeMockData()
 
   return {
-    orders: data.orders,
+    orders: USE_SUPABASE ? [] : data.orders,
     selectedOrderId: null,
     statusFilter: [],
     channelFilter: "All",
     dateRange: { from: null, to: null },
     searchQuery: "",
+    isLoading: USE_SUPABASE,
+    error: null,
+
+    fetchData: async () => {
+      if (!USE_SUPABASE) {
+        const mockData = initializeMockData()
+        set({ orders: mockData.orders, isLoading: false })
+        return
+      }
+      set({ isLoading: true, error: null })
+      try {
+        const orders = await fetchOrders()
+        set({ orders, isLoading: false })
+      } catch (err) {
+        set({ error: (err as Error).message, isLoading: false })
+      }
+    },
 
     getOrderById: (id) => {
       return get().orders.find((o) => o.id === id)
@@ -96,6 +118,16 @@ export const useOrderStore = create<OrderState & OrderActions>((set, get) => {
             : o
         ),
       }))
+
+      // Fire-and-forget Supabase update
+      if (USE_SUPABASE) {
+        advanceOrderStageApi(
+          orderId,
+          order.status,
+          nextStatus,
+          order.assignedArtisan
+        ).catch(console.error)
+      }
 
       return true
     },

@@ -1,9 +1,10 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { Link } from "react-router"
 import { ArrowRight } from "lucide-react"
 import { PageContainer } from "@/components/layout/PageContainer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { usePartnerStore } from "@/stores/usePartnerStore"
 
 function formatCurrency(value: number): string {
@@ -32,6 +33,12 @@ export default function PartnersPage() {
   const partners = usePartnerStore((s) => s.partners)
   const getPartnerMetrics = usePartnerStore((s) => s.getPartnerMetrics)
 
+  const fetchData = usePartnerStore((s) => s.fetchData)
+  const isLoading = usePartnerStore((s) => s.isLoading)
+  const error = usePartnerStore((s) => s.error)
+
+  useEffect(() => { fetchData() }, [])
+
   const stats = useMemo(() => {
     const totalPartners = partners.length
     const activeOrders = partners.reduce((sum, p) => sum + p.activeOrders, 0)
@@ -44,6 +51,7 @@ export default function PartnersPage() {
 
   return (
     <PageContainer title="B2B Partners">
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -171,6 +179,7 @@ export default function PartnersPage() {
           })}
         </div>
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

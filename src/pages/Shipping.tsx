@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, Search, Truck, Package } from "lucide-react"
@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { useShippingStore } from "@/stores/useShippingStore"
 import { useCustomerStore } from "@/stores/useCustomerStore"
 import type { Shipment, ShipmentStatus } from "@/data/types"
@@ -49,6 +50,20 @@ export default function ShippingPage() {
   const [statusFilter, setStatusFilter] = useState<ShipmentStatus[]>([])
   const [carrierFilter, setCarrierFilter] = useState("All")
   const [searchQuery, setSearchQuery] = useState("")
+
+  const fetchShippingData = useShippingStore((s) => s.fetchData)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const shippingLoading = useShippingStore((s) => s.isLoading)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const shippingError = useShippingStore((s) => s.error)
+  const customerError = useCustomerStore((s) => s.error)
+  const isLoading = shippingLoading || customerLoading
+  const error = shippingError || customerError
+
+  useEffect(() => {
+    fetchShippingData()
+    fetchCustomerData()
+  }, [])
 
   const customerMap = useMemo(
     () => new Map(customers.map((c) => [c.id, c])),
@@ -247,6 +262,7 @@ export default function ShippingPage() {
 
   return (
     <PageContainer title="Shipping & Fulfillment">
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-4">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -336,6 +352,7 @@ export default function ShippingPage() {
         {/* Table */}
         <DataTable columns={columns} data={rows} pageSize={20} />
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

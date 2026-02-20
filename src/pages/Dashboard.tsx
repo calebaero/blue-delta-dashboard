@@ -1,5 +1,6 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { PageContainer } from "@/components/layout/PageContainer"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { KpiCard } from "@/components/charts/KpiCard"
 import { PipelineChart } from "@/components/charts/PipelineChart"
 import { InventoryAlertList } from "@/components/charts/InventoryAlertList"
@@ -11,7 +12,7 @@ import { useCustomerStore } from "@/stores/useCustomerStore"
 import { useInventoryStore } from "@/stores/useInventoryStore"
 import { useProductionStore } from "@/stores/useProductionStore"
 import { useAnalyticsStore } from "@/stores/useAnalyticsStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 
 function formatCurrency(value: number): string {
   return `$${value.toLocaleString()}`
@@ -20,13 +21,44 @@ function formatCurrency(value: number): string {
 export default function DashboardPage() {
   const orders = useOrderStore((s) => s.orders)
   const customers = useCustomerStore((s) => s.customers)
+  const products = useProductStore((s) => s.products)
+  const fabricRolls = useInventoryStore((s) => s.fabricRolls)
   const getInventoryAlerts = useInventoryStore((s) => s.getInventoryAlerts)
+  const productionOrders = useProductionStore((s) => s.orders)
   const getOrdersByStage = useProductionStore((s) => s.getOrdersByStage)
   const monthlyMetrics = useAnalyticsStore((s) => s.monthlyMetrics)
-  const getChannelMixData = useAnalyticsStore((s) => s.getChannelMixData)
-  const getRevenueData = useAnalyticsStore((s) => s.getRevenueData)
+  const channelMixData = useAnalyticsStore((s) => s.getChannelMixData)
+  const revenueDataFn = useAnalyticsStore((s) => s.getRevenueData)
+  const fetchOrderData = useOrderStore((s) => s.fetchData)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const fetchInventoryData = useInventoryStore((s) => s.fetchData)
+  const fetchProductionData = useProductionStore((s) => s.fetchData)
+  const fetchAnalyticsData = useAnalyticsStore((s) => s.fetchData)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const orderLoading = useOrderStore((s) => s.isLoading)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const inventoryLoading = useInventoryStore((s) => s.isLoading)
+  const productionLoading = useProductionStore((s) => s.isLoading)
+  const analyticsLoading = useAnalyticsStore((s) => s.isLoading)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const orderError = useOrderStore((s) => s.error)
+  const customerError = useCustomerStore((s) => s.error)
+  const inventoryError = useInventoryStore((s) => s.error)
+  const productionError = useProductionStore((s) => s.error)
+  const analyticsError = useAnalyticsStore((s) => s.error)
+  const productError = useProductStore((s) => s.error)
 
-  const { products } = initializeMockData()
+  const isLoading = orderLoading || customerLoading || inventoryLoading || productionLoading || analyticsLoading || productLoading
+  const error = orderError || customerError || inventoryError || productionError || analyticsError || productError
+
+  useEffect(() => {
+    fetchOrderData()
+    fetchCustomerData()
+    fetchInventoryData()
+    fetchProductionData()
+    fetchAnalyticsData()
+    fetchProductData()
+  }, [])
 
   const kpis = useMemo(() => {
     // Find the most recent order date in data to use as "today"
@@ -178,14 +210,15 @@ export default function DashboardPage() {
       count: sg.count,
       avgDaysInStage: sg.avgDaysInStage,
     }))
-  }, [getOrdersByStage])
+  }, [getOrdersByStage, productionOrders])
 
-  const inventoryAlerts = useMemo(() => getInventoryAlerts(), [getInventoryAlerts])
-  const revenueData = useMemo(() => getRevenueData(), [getRevenueData])
-  const channelData = useMemo(() => getChannelMixData(), [getChannelMixData])
+  const inventoryAlerts = useMemo(() => getInventoryAlerts(), [getInventoryAlerts, fabricRolls])
+  const revenueData = useMemo(() => revenueDataFn(), [revenueDataFn, monthlyMetrics])
+  const channelData = useMemo(() => channelMixData(), [channelMixData, orders])
 
   return (
     <PageContainer title="Dashboard">
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-6">
         {/* ROW 1 — KPI Cards */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -255,6 +288,7 @@ export default function DashboardPage() {
         {/* ROW 4 — Channel Mix */}
         <ChannelMixChart data={channelData} />
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

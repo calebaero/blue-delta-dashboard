@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useParams, Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import {
@@ -25,9 +25,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { usePartnerStore } from "@/stores/usePartnerStore"
 import { useCustomerStore } from "@/stores/useCustomerStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 import type { Order, PartnerRep } from "@/data/types"
 
 function formatCurrency(value: number): string {
@@ -55,9 +56,27 @@ export default function PartnerDetailPage() {
   const getPartnerOrders = usePartnerStore((s) => s.getPartnerOrders)
   const getPartnerMetrics = usePartnerStore((s) => s.getPartnerMetrics)
   const customers = useCustomerStore((s) => s.customers)
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
 
   const [selectedRep, setSelectedRep] = useState<PartnerRep | null>(null)
+
+  const fetchPartnerData = usePartnerStore((s) => s.fetchData)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const partnerLoading = usePartnerStore((s) => s.isLoading)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const partnerError = usePartnerStore((s) => s.error)
+  const customerError = useCustomerStore((s) => s.error)
+  const productError = useProductStore((s) => s.error)
+  const isLoading = partnerLoading || customerLoading || productLoading
+  const error = partnerError || customerError || productError
+
+  useEffect(() => {
+    fetchPartnerData()
+    fetchCustomerData()
+    fetchProductData()
+  }, [])
 
   const partner = getPartnerById(id ?? "")
   const reps = useMemo(
@@ -321,6 +340,7 @@ export default function PartnerDetailPage() {
 
   return (
     <PageContainer title={partner.name}>
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-6">
         <Button asChild variant="ghost" size="sm" className="gap-1">
           <Link to="/partners">
@@ -574,6 +594,7 @@ export default function PartnerDetailPage() {
           </SheetContent>
         </Sheet>
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

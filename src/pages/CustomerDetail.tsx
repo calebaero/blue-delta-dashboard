@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useParams, Link } from "react-router"
 import {
   Radar,
@@ -20,6 +20,7 @@ import {
   Package,
 } from "lucide-react"
 import { PageContainer } from "@/components/layout/PageContainer"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { DataTable } from "@/components/shared/DataTable"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -29,7 +30,7 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { useCustomerStore } from "@/stores/useCustomerStore"
 import { useOrderStore } from "@/stores/useOrderStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 import type { Customer, Order, MeasurementProfile } from "@/data/types"
 
 function formatDate(dateStr: string): string {
@@ -53,7 +54,24 @@ export default function CustomerDetailPage() {
   )
   const getActiveMeasurement = useCustomerStore((s) => s.getActiveMeasurement)
   const getOrdersByCustomer = useOrderStore((s) => s.getOrdersByCustomer)
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const fetchOrderData = useOrderStore((s) => s.fetchData)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const orderLoading = useOrderStore((s) => s.isLoading)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const customerError = useCustomerStore((s) => s.error)
+  const orderError = useOrderStore((s) => s.error)
+  const productError = useProductStore((s) => s.error)
+  const isLoading = customerLoading || orderLoading || productLoading
+  const error = customerError || orderError || productError
+
+  useEffect(() => {
+    fetchCustomerData()
+    fetchOrderData()
+    fetchProductData()
+  }, [])
 
   const customer = id ? getCustomerById(id) : undefined
   const measurements = id ? getCustomerMeasurements(id) : []
@@ -158,6 +176,7 @@ export default function CustomerDetailPage() {
     <PageContainer
       title={`${customer.firstName} ${customer.lastName}`}
     >
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* LEFT — Summary card */}
         <div className="space-y-4">
@@ -349,6 +368,7 @@ export default function CustomerDetailPage() {
           </Tabs>
         </div>
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

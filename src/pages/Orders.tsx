@@ -1,8 +1,9 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, Search } from "lucide-react"
 import { PageContainer } from "@/components/layout/PageContainer"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { DataTable } from "@/components/shared/DataTable"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { Input } from "@/components/ui/input"
@@ -17,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useOrderStore } from "@/stores/useOrderStore"
 import { useCustomerStore } from "@/stores/useCustomerStore"
-import { initializeMockData } from "@/data/mockData"
+import { useProductStore } from "@/stores/useProductStore"
 import type { Order, OrderStatus, OrderChannel } from "@/data/types"
 
 const ALL_STATUSES: OrderStatus[] = [
@@ -60,13 +61,30 @@ export default function OrdersPage() {
   const setChannelFilter = useOrderStore((s) => s.setChannelFilter)
   const setSearchQuery = useOrderStore((s) => s.setSearchQuery)
   const customers = useCustomerStore((s) => s.customers)
+  const fetchOrderData = useOrderStore((s) => s.fetchData)
+  const fetchCustomerData = useCustomerStore((s) => s.fetchData)
+  const fetchProductData = useProductStore((s) => s.fetchData)
+  const orderLoading = useOrderStore((s) => s.isLoading)
+  const customerLoading = useCustomerStore((s) => s.isLoading)
+  const productLoading = useProductStore((s) => s.isLoading)
+  const orderError = useOrderStore((s) => s.error)
+  const customerError = useCustomerStore((s) => s.error)
+  const productError = useProductStore((s) => s.error)
+  const isLoading = orderLoading || customerLoading || productLoading
+  const error = orderError || customerError || productError
+
+  useEffect(() => {
+    fetchOrderData()
+    fetchCustomerData()
+    fetchProductData()
+  }, [])
 
   const customerMap = useMemo(
     () => new Map(customers.map((c) => [c.id, c])),
     [customers]
   )
 
-  const { products } = initializeMockData()
+  const products = useProductStore((s) => s.products)
   const productMap = useMemo(
     () => new Map(products.map((p) => [p.id, p])),
     [products]
@@ -234,6 +252,7 @@ export default function OrdersPage() {
 
   return (
     <PageContainer title="Orders">
+      <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-4">
         {/* Status filter pills */}
         <div className="flex flex-wrap gap-2">
@@ -298,6 +317,7 @@ export default function OrdersPage() {
         {/* Table */}
         <DataTable columns={columns} data={filteredOrders} pageSize={20} />
       </div>
+      </PageLoadingState>
     </PageContainer>
   )
 }

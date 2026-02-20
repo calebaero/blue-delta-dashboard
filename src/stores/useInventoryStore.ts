@@ -1,6 +1,9 @@
 import { create } from "zustand"
 import type { FabricRoll, HardwareItem } from "@/data/types"
 import { initializeMockData } from "@/data/mockData"
+import { USE_SUPABASE } from "@/lib/config"
+import { fetchFabricRolls, fetchHardwareItems } from "@/lib/queries"
+import { subscribeToFabricRolls } from "@/lib/realtime"
 
 interface InventoryAlert {
   id: string
@@ -16,9 +19,13 @@ interface InventoryState {
   fabricRolls: FabricRoll[]
   hardware: HardwareItem[]
   selectedRollId: string | null
+  isLoading: boolean
+  error: string | null
 }
 
 interface InventoryActions {
+  fetchData: () => Promise<void>
+  subscribeRealtime: () => () => void
   getRollById: (id: string) => FabricRoll | undefined
   deductYardage: (rollId: string, yards: number) => boolean
   getLowStockRolls: () => FabricRoll[]
@@ -32,9 +39,38 @@ export const useInventoryStore = create<InventoryState & InventoryActions>(
     const data = initializeMockData()
 
     return {
-      fabricRolls: data.fabricRolls,
-      hardware: data.hardware,
+      fabricRolls: USE_SUPABASE ? [] : data.fabricRolls,
+      hardware: USE_SUPABASE ? [] : data.hardware,
       selectedRollId: null,
+      isLoading: USE_SUPABASE,
+      error: null,
+
+      fetchData: async () => {
+        if (!USE_SUPABASE) {
+          const mockData = initializeMockData()
+          set({ fabricRolls: mockData.fabricRolls, hardware: mockData.hardware, isLoading: false })
+          return
+        }
+        set({ isLoading: true, error: null })
+        try {
+          const [fabricRolls, hardware] = await Promise.all([
+            fetchFabricRolls(),
+            fetchHardwareItems(),
+          ])
+          set({ fabricRolls, hardware, isLoading: false })
+        } catch (err) {
+          set({ error: (err as Error).message, isLoading: false })
+        }
+      },
+
+      subscribeRealtime: () => {
+        if (!USE_SUPABASE) return () => {}
+        return subscribeToFabricRolls(() => {
+          fetchFabricRolls()
+            .then((fabricRolls) => set({ fabricRolls }))
+            .catch(console.error)
+        })
+      },
 
       getRollById: (id) => {
         return get().fabricRolls.find((r) => r.id === id)

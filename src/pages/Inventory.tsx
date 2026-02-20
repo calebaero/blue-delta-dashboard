@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import {
@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { PageLoadingState } from "@/components/shared/PageLoadingState"
 import { useInventoryStore } from "@/stores/useInventoryStore"
 import { useAnalyticsStore } from "@/stores/useAnalyticsStore"
 import type { FabricRoll, HardwareItem, RollStatus } from "@/data/types"
@@ -57,6 +58,22 @@ export default function InventoryPage() {
   const hardware = useInventoryStore((s) => s.hardware)
   const getInventoryAlerts = useInventoryStore((s) => s.getInventoryAlerts)
   const monthlyMetrics = useAnalyticsStore((s) => s.monthlyMetrics)
+
+  const fetchInventoryData = useInventoryStore((s) => s.fetchData)
+  const subscribeInventory = useInventoryStore((s) => s.subscribeRealtime)
+  const fetchAnalyticsData = useAnalyticsStore((s) => s.fetchData)
+  const inventoryLoading = useInventoryStore((s) => s.isLoading)
+  const analyticsLoading = useAnalyticsStore((s) => s.isLoading)
+  const inventoryError = useInventoryStore((s) => s.error)
+  const analyticsError = useAnalyticsStore((s) => s.error)
+  const isLoading = inventoryLoading || analyticsLoading
+  const error = inventoryError || analyticsError
+
+  useEffect(() => {
+    fetchInventoryData()
+    fetchAnalyticsData()
+    return subscribeInventory()
+  }, [])
 
   const alerts = getInventoryAlerts()
 
@@ -368,6 +385,7 @@ export default function InventoryPage() {
 
   return (
     <PageContainer title="Inventory">
+      <PageLoadingState isLoading={isLoading} error={error}>
       <Tabs defaultValue="fabric">
         <TabsList>
           <TabsTrigger value="fabric">Fabric Rolls</TabsTrigger>
@@ -618,6 +636,7 @@ export default function InventoryPage() {
           )}
         </TabsContent>
       </Tabs>
+      </PageLoadingState>
     </PageContainer>
   )
 }

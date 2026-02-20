@@ -1,6 +1,9 @@
 import { create } from "zustand"
 import type { Order, OrderStatus } from "@/data/types"
 import { initializeMockData } from "@/data/mockData"
+import { USE_SUPABASE } from "@/lib/config"
+import { fetchOrders, advanceOrderStage as advanceOrderStageApi } from "@/lib/queries"
+import { subscribeToOrders } from "@/lib/realtime"
 
 const PIPELINE_ORDER: OrderStatus[] = [
   "Order Received",
@@ -33,9 +36,13 @@ interface PipelineMetrics {
 
 interface ProductionState {
   orders: Order[]
+  isLoading: boolean
+  error: string | null
 }
 
 interface ProductionActions {
+  fetchData: () => Promise<void>
+  subscribeRealtime: () => () => void
   getOrdersByStage: () => StageGroup[]
   moveOrderToStage: (orderId: string, newStage: OrderStatus) => boolean
   getArtisanWorkload: () => ArtisanWorkload[]
@@ -47,7 +54,33 @@ export const useProductionStore = create<ProductionState & ProductionActions>(
     const data = initializeMockData()
 
     return {
-      orders: data.orders,
+      orders: USE_SUPABASE ? [] : data.orders,
+      isLoading: USE_SUPABASE,
+      error: null,
+
+      fetchData: async () => {
+        if (!USE_SUPABASE) {
+          const mockData = initializeMockData()
+          set({ orders: mockData.orders, isLoading: false })
+          return
+        }
+        set({ isLoading: true, error: null })
+        try {
+          const orders = await fetchOrders()
+          set({ orders, isLoading: false })
+        } catch (err) {
+          set({ error: (err as Error).message, isLoading: false })
+        }
+      },
+
+      subscribeRealtime: () => {
+        if (!USE_SUPABASE) return () => {}
+        return subscribeToOrders(() => {
+          fetchOrders()
+            .then((orders) => set({ orders }))
+            .catch(console.error)
+        })
+      },
 
       getOrdersByStage: () => {
         const { orders } = get()
@@ -59,7 +92,7 @@ export const useProductionStore = create<ProductionState & ProductionActions>(
           // Calculate avg days in stage for current occupants
           let totalDays = 0
           for (const order of stageOrders) {
-            const currentStage = order.pipelineStages.find(
+            const currentStage = (order.pipelineStages ?? []).find(
               (s) => s.stage === stage && !s.exitedAt
             )
             if (currentStage) {
@@ -94,7 +127,7 @@ export const useProductionStore = create<ProductionState & ProductionActions>(
         const now = new Date().toISOString()
 
         // Close current stage and add new
-        const updatedStages = order.pipelineStages.map((s) =>
+        const updatedStages = (order.pipelineStages ?? []).map((s) =>
           s.stage === order.status && !s.exitedAt
             ? { ...s, exitedAt: now }
             : s
@@ -122,6 +155,16 @@ export const useProductionStore = create<ProductionState & ProductionActions>(
               : o
           ),
         }))
+
+        // Fire-and-forget Supabase update
+        if (USE_SUPABASE) {
+          advanceOrderStageApi(
+            orderId,
+            order.status,
+            newStage,
+            order.assignedArtisan
+          ).catch(console.error)
+        }
 
         return true
       },

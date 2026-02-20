@@ -1,6 +1,8 @@
 import { create } from "zustand"
 import type { Customer, MeasurementProfile, LoyaltyTier, OrderChannel } from "@/data/types"
 import { initializeMockData } from "@/data/mockData"
+import { USE_SUPABASE } from "@/lib/config"
+import { fetchCustomers, fetchAllMeasurements } from "@/lib/queries"
 
 interface CustomerState {
   customers: Customer[]
@@ -9,9 +11,12 @@ interface CustomerState {
   searchQuery: string
   tierFilter: LoyaltyTier | "All"
   channelFilter: OrderChannel | "All"
+  isLoading: boolean
+  error: string | null
 }
 
 interface CustomerActions {
+  fetchData: () => Promise<void>
   getCustomerById: (id: string) => Customer | undefined
   getCustomerMeasurements: (customerId: string) => MeasurementProfile[]
   getActiveMeasurement: (customerId: string) => MeasurementProfile | undefined
@@ -25,15 +30,36 @@ interface CustomerActions {
 
 export const useCustomerStore = create<CustomerState & CustomerActions>(
   (set, get) => {
+    // Initialize with mock data synchronously so the store is never empty
     const data = initializeMockData()
 
     return {
-      customers: data.customers,
-      measurements: data.measurements,
+      customers: USE_SUPABASE ? [] : data.customers,
+      measurements: USE_SUPABASE ? [] : data.measurements,
       selectedCustomerId: null,
       searchQuery: "",
       tierFilter: "All",
       channelFilter: "All",
+      isLoading: USE_SUPABASE,
+      error: null,
+
+      fetchData: async () => {
+        if (!USE_SUPABASE) {
+          const mockData = initializeMockData()
+          set({ customers: mockData.customers, measurements: mockData.measurements, isLoading: false })
+          return
+        }
+        set({ isLoading: true, error: null })
+        try {
+          const [customers, measurements] = await Promise.all([
+            fetchCustomers(),
+            fetchAllMeasurements(),
+          ])
+          set({ customers, measurements, isLoading: false })
+        } catch (err) {
+          set({ error: (err as Error).message, isLoading: false })
+        }
+      },
 
       getCustomerById: (id) => {
         return get().customers.find((c) => c.id === id)
