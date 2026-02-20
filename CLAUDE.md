@@ -55,3 +55,34 @@
 - No localStorage or sessionStorage
 - No class components
 - No inline styles (use Tailwind)
+
+# Supabase Integration Rules
+
+## Database
+- All table and column names use snake_case (PostgreSQL convention)
+- Primary keys: `id uuid PRIMARY KEY DEFAULT gen_random_uuid()`
+- Timestamps: always `timestamptz`, never `timestamp` — defaults to `now()`
+- Use CHECK constraints for enum-like values, NOT native PostgreSQL ENUMs
+- Every foreign key column gets a manual B-tree index (Supabase does NOT auto-index FKs)
+- ON DELETE CASCADE for dependent child records, ON DELETE SET NULL for optional references
+- JSONB for semi-structured data (addresses, customization options)
+- All tables get `created_at timestamptz NOT NULL DEFAULT now()` and `updated_at timestamptz`
+
+## Row Level Security
+- RLS enabled on EVERY table
+- Demo policy: allow anon + authenticated full read access
+- Allow authenticated users full write access
+- Never leave a table with RLS enabled but no policies (returns 0 rows)
+
+## Supabase Client
+- Use @supabase/supabase-js (v2.x)
+- Singleton client in `src/lib/supabase.ts`
+- Environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in `.env.local`
+- Generate TypeScript types with: npx supabase gen types typescript --project-id "$PROJECT_REF" > src/lib/database.types.ts
+- Use typed client: createClient(url, key)
+
+## Data Access
+- Use Supabase's nested select syntax for joins (not raw SQL from client)
+- Pagination with .range(start, end), not .limit()
+- Counts with .select('*', { count: 'exact', head: true })
+- All queries go through Zustand store actions — components never call supabase directly
