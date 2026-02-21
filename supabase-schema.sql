@@ -145,10 +145,10 @@ COMMENT ON TABLE measurement_profiles IS 'Body measurement profiles — 16-point
 CREATE TABLE products (
   id                      uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name                    text NOT NULL,
-  category                text NOT NULL CHECK (category IN ('Pants', 'Jacket', 'Belt', 'Accessory')),
+  category                text NOT NULL CHECK (category IN ('Pants', 'Jacket', 'Belt', 'Hat', 'Accessory')),
   base_price              numeric(10,2) NOT NULL,
   description             text NOT NULL,
-  fabric_family           text CHECK (fabric_family IN ('Raw Denim', 'Cotton Chino', 'Performance', 'Cashiers Collection') OR fabric_family IS NULL),
+  fabric_family           text CHECK (fabric_family IN ('Raw Denim', 'Cotton Chino', 'Performance', 'Cashiers Collection', 'Waxed Canvas', 'Canvas', 'Leather', 'Hat Fabric') OR fabric_family IS NULL),
   is_active               boolean NOT NULL DEFAULT true,
   customization_options   jsonb DEFAULT '[]'::jsonb,
   created_at              timestamptz NOT NULL DEFAULT now(),
@@ -160,7 +160,7 @@ COMMENT ON TABLE products IS 'Product catalog — pants, jackets, belts, accesso
 CREATE TABLE fabric_rolls (
   id                    uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   material_name         text NOT NULL,
-  fabric_family         text NOT NULL CHECK (fabric_family IN ('Raw Denim', 'Cotton Chino', 'Performance', 'Cashiers Collection')),
+  fabric_family         text NOT NULL CHECK (fabric_family IN ('Raw Denim', 'Cotton Chino', 'Performance', 'Cashiers Collection', 'Waxed Canvas', 'Canvas', 'Leather', 'Hat Fabric')),
   color                 text NOT NULL,
   weight_oz             numeric(4,1) NOT NULL,
   composition           text NOT NULL,
