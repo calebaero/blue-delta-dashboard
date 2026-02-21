@@ -583,7 +583,7 @@ export default function InventoryPage() {
           </div>
 
           {/* Fabric table */}
-          <DataTable columns={rollColumns} data={fabricRolls} pageSize={15} />
+          <DataTable columns={rollColumns} data={fabricRolls} pageSize={51} />
         </TabsContent>
 
         {/* Hardware Tab */}
