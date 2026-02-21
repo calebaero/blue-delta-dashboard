@@ -237,7 +237,7 @@ export default function RollDetailPage() {
   }
 
   return (
-    <PageContainer title={`Roll ${roll.id}`}>
+    <PageContainer title={`Roll ${roll.materialName}`}>
       <PageLoadingState isLoading={isLoading} error={error}>
       <div className="space-y-6">
         {/* Back link */}

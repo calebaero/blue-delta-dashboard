@@ -141,13 +141,6 @@ export default function InventoryPage() {
         ),
       },
       {
-        accessorKey: "materialName",
-        header: "Material",
-        cell: ({ row }) => (
-          <span className="text-sm">{row.original.materialName}</span>
-        ),
-      },
-      {
         accessorKey: "color",
         header: "Color",
         cell: ({ row }) => (
