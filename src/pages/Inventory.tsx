@@ -136,7 +136,7 @@ export default function InventoryPage() {
             to={`/inventory/rolls/${row.original.id}`}
             className="text-sm font-medium text-indigo-700 hover:underline dark:text-indigo-400"
           >
-            {row.original.id}
+            {row.original.materialName}
           </Link>
         ),
       },
