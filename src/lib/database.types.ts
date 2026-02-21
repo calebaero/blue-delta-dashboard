@@ -80,7 +80,7 @@ export type Database = {
           has_fit_confirmation?: boolean
           height?: string | null
           how_heard_about_us: string
-          id?: string
+          id: string
           is_white_glove?: boolean
           items_altered?: number
           land_line?: string | null
@@ -526,7 +526,7 @@ export type Database = {
           gift_recipient?: string | null
           gift_sender?: string | null
           hardware?: string
-          id?: string
+          id: string
           measurement_profile_id: string
           monogram?: string | null
           monogram_style?: string | null
@@ -881,7 +881,7 @@ export type Database = {
           created_at?: string
           customer_id: string
           estimated_delivery: string
-          id?: string
+          id: string
           order_id: string
           shipped_date: string
           shipping_address: Json
@@ -957,6 +957,40 @@ export type Database = {
           total_orders: number | null
           total_spent: number | null
         }
+        Insert: {
+          channel?: string | null
+          city?: never
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string | null
+          is_white_glove?: boolean | null
+          last_name?: string | null
+          last_order_date?: string | null
+          loyalty_tier?: string | null
+          phone?: string | null
+          reward_points?: number | null
+          state?: never
+          total_orders?: number | null
+          total_spent?: number | null
+        }
+        Update: {
+          channel?: string | null
+          city?: never
+          created_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string | null
+          is_white_glove?: boolean | null
+          last_name?: string | null
+          last_order_date?: string | null
+          loyalty_tier?: string | null
+          phone?: string | null
+          reward_points?: number | null
+          state?: never
+          total_orders?: number | null
+          total_spent?: number | null
+        }
         Relationships: []
       }
       inventory_alerts: {
@@ -1015,7 +1049,57 @@ export type Database = {
           updated_at: string | null
           yardage_used: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_fabric_roll_id_fkey"
+            columns: ["fabric_roll_id"]
+            isOneToOne: false
+            referencedRelation: "fabric_rolls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_measurement_profile_id_fkey"
+            columns: ["measurement_profile_id"]
+            isOneToOne: false
+            referencedRelation: "measurement_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_partner_rep_id_fkey"
+            columns: ["partner_rep_id"]
+            isOneToOne: false
+            referencedRelation: "partner_reps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       production_pipeline_summary: {
         Row: {
@@ -1120,3 +1204,43 @@ export type TablesUpdate<
       ? U
       : never
     : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const
