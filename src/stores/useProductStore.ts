@@ -30,6 +30,8 @@ export const useProductStore = create<ProductState & ProductActions>(
           set({ products: mockData.products, isLoading: false })
           return
         }
+        // Skip if already loaded to prevent re-render loops
+        if (get().products.length > 0 && !get().isLoading) return
         set({ isLoading: true, error: null })
         try {
           const products = await fetchProducts()

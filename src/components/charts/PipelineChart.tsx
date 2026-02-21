@@ -46,7 +46,7 @@ export function PipelineChart({ data }: PipelineChartProps) {
         acc[d.stage] = d.count
         return acc
       },
-      {} as Record<string, number>
+      { name: "pipeline" } as Record<string, number | string>
     ),
   ]
 
@@ -61,7 +61,7 @@ export function PipelineChart({ data }: PipelineChartProps) {
         </p>
       </CardHeader>
       <CardContent>
-        <div className="h-16">
+        <div className="h-14">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useMemo } from "react"
 import {
   DragDropContext,
   Droppable,
@@ -60,11 +60,6 @@ export function KanbanBoard({
   const customers = useCustomerStore((s) => s.customers)
   const fabricRolls = useInventoryStore((s) => s.fabricRolls)
   const products = useProductStore((s) => s.products)
-  const fetchProductData = useProductStore((s) => s.fetchData)
-
-  useEffect(() => {
-    fetchProductData()
-  }, [])
 
   const customerMap = useMemo(
     () => new Map(customers.map((c) => [c.id, c])),
